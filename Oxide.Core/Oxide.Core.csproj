@@ -47,6 +47,8 @@
     <Compile Include="ExceptionHandler.cs" />
     <Compile Include="Extensions\Extension.cs" />
     <Compile Include="Extensions\ExtensionManager.cs" />
+    <Compile Include="HookSystem\Hook.cs" />
+    <Compile Include="ILTest.cs" />
     <Compile Include="Interface.cs" />
     <Compile Include="Libraries\Global.cs" />
     <Compile Include="Libraries\Library.cs" />
