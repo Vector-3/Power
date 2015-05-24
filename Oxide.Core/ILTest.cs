@@ -20,9 +20,12 @@ namespace Oxide.Core
         }
         public readonly Hook<int, NestedHookArgs> NestedHook;
 
+        public readonly Hook<NoArg> BasicHook;
+
         public ILTest()
         {
             NestedHook = new Hook<int, NestedHookArgs>(ConflictResolutionType.Warn, "NestedHook");
+            BasicHook = new Hook<NoArg>("BasicHook");
         }
 
         private int SomeMethodWhichDoesThings(int a, int b)
@@ -34,9 +37,15 @@ namespace Oxide.Core
         private int SomeMethodWhichDoesThingsHooked(int a, int b)
         {
             int c = a + b;
-            int? hookReturnValue = NestedHook.Call(new NestedHookArgs(a, b));
+            HookReturnValue<int> hookReturnValue = NestedHook.Call(new NestedHookArgs(a, b));
             if (hookReturnValue.HasValue) return hookReturnValue.Value;
             return c;
+        }
+
+        private void SomeMethodWhichIsPrettyBasic()
+        {
+            Console.WriteLine("Basic shit");
+            BasicHook.Call(new NoArg());
         }
 
         
