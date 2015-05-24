@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Diagnostics;
 
 using Oxide.Core.Configuration;
 using Oxide.Core.Extensions;
@@ -46,6 +47,8 @@ namespace Oxide.Core
         public string DataDirectory { get; private set; }
         public string LogDirectory { get; private set; }
 
+        private Stopwatch oxideTimer;
+
         // Gets the number of seconds since the server started
         public float Now { get { return getTimeSinceStartup(); } }
 
@@ -89,6 +92,11 @@ namespace Oxide.Core
         /// </summary>
         public void Load()
         {
+            // Start timer
+            oxideTimer = new Stopwatch();
+            oxideTimer.Start();
+            getTimeSinceStartup = () => (float)oxideTimer.Elapsed.TotalSeconds;
+
             RootDirectory = Environment.CurrentDirectory;
 
             // Create the commandline

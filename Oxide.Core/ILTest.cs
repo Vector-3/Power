@@ -18,11 +18,11 @@ namespace Oxide.Core
                 this.b = b;
             }
         }
-        public readonly Hook<int, NestedHookArgs> NestedHook;
+        public static readonly Hook<int, NestedHookArgs> NestedHook;
 
-        public readonly Hook<NoArg> BasicHook;
+        public static readonly Hook<NoArg> BasicHook;
 
-        public ILTest()
+        static ILTest()
         {
             NestedHook = new Hook<int, NestedHookArgs>(ConflictResolutionType.Warn, "NestedHook");
             BasicHook = new Hook<NoArg>("BasicHook");
