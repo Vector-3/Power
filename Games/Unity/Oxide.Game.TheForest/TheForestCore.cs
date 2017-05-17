@@ -209,19 +209,15 @@ namespace Oxide.Game.TheForest
         private void OnPlayerConnected(BoltEntity entity)
         {
             var id = entity.source.RemoteEndPoint.SteamId.Id.ToString();
-            var name = SteamFriends.GetFriendPersonaName(new CSteamID(entity.source.RemoteEndPoint.SteamId.Id));
+            var name = entity.GetState<IPlayerState>().name;
 
-            Debug.Log($"{id}/{name} joined");
-
-            // Do permission stuff
             if (permission.IsLoaded)
             {
-                // Update stored name
                 permission.UpdateNickname(id, name);
-
-                // Add player to default group
                 if (!permission.UserHasGroup(id, DefaultGroups[0])) permission.AddUserGroup(id, DefaultGroups[0]);
             }
+
+            Debug.Log($"{id}/{name} joined");
 
             // Let covalence know
             Covalence.PlayerManager.NotifyPlayerConnect(entity);
@@ -236,8 +232,8 @@ namespace Oxide.Game.TheForest
         [HookMethod("IOnPlayerDisconnected")]
         private void IOnPlayerDisconnected(BoltConnection connection)
         {
-            var id = connection.RemoteEndPoint.SteamId.Id;
-            var entity = Scene.SceneTracker.allPlayerEntities.FirstOrDefault(ent => ent.source.RemoteEndPoint.SteamId.Id == id);
+            var id = connection.RemoteEndPoint.SteamId.Id.ToString();
+            var entity = Scene.SceneTracker.allPlayerEntities.FirstOrDefault(ent => ent.source.ConnectionId == connection.ConnectionId);
             if (entity == null) return;
 
             var name = entity.GetState<IPlayerState>().name;
@@ -248,7 +244,7 @@ namespace Oxide.Game.TheForest
             Interface.Call("OnPlayerDisconnected", entity);
 
             // Let covalence know
-            var iplayer = Covalence.PlayerManager.FindPlayerById(id.ToString());
+            var iplayer = Covalence.PlayerManager.FindPlayerById(id);
             if (iplayer != null) Interface.Call("OnUserDisconnected", iplayer, "Unknown");
             Covalence.PlayerManager.NotifyPlayerDisconnect(entity);
         }
