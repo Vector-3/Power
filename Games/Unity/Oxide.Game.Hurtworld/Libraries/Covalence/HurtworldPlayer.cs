@@ -30,7 +30,7 @@ namespace Oxide.Game.Hurtworld.Libraries.Covalence
             Id = id.ToString();
         }
 
-        internal HurtworldPlayer(PlayerSession session) : this(session.SteamId.m_SteamID, session.Name)
+        internal HurtworldPlayer(PlayerSession session) : this(session.SteamId.m_SteamID, session.Identity.Name)
         {
             this.session = session;
             cSteamId = session.SteamId;
@@ -129,12 +129,12 @@ namespace Oxide.Game.Hurtworld.Libraries.Covalence
             get
             {
                 var stats = session.WorldPlayerEntity.GetComponent<EntityStats>();
-                return stats.GetFluidEffect(EEntityFluidEffectType.Health).GetValue();
+                return stats.GetFluidEffect(EntityFluidEffectKeyDatabase.Instance.Health).GetValue();
             }
             set
             {
                 var stats = session.WorldPlayerEntity.GetComponent<EntityStats>();
-                var effect = stats.GetFluidEffect(EEntityFluidEffectType.Health) as StandardEntityFluidEffect;
+                var effect = stats.GetFluidEffect(EntityFluidEffectKeyDatabase.Instance.Health) as StandardEntityFluidEffect;
                 effect?.SetValue(value);
             }
         }
@@ -164,13 +164,13 @@ namespace Oxide.Game.Hurtworld.Libraries.Covalence
             get
             {
                 var stats = session.WorldPlayerEntity.GetComponent<EntityStats>();
-                return stats.GetFluidEffect(EEntityFluidEffectType.Health).GetMaxValue();
+                return stats.GetFluidEffect(EntityFluidEffectKeyDatabase.Instance.Health).GetMaxValue();
             }
             set
             {
                 var stats = session.WorldPlayerEntity.GetComponent<EntityStats>();
-                var effect = stats.GetFluidEffect(EEntityFluidEffectType.Health) as StandardEntityFluidEffect;
-                effect?.MaxValue(value);
+                var effect = stats.GetFluidEffect(EntityFluidEffectKeyDatabase.Instance.Health) as StandardEntityFluidEffect;
+                if (effect != null) effect.MaxValue = value;
             }
         }
 

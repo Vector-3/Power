@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -230,6 +230,21 @@ namespace Oxide.Game.Hurtworld
         #region Player Hooks
 
         /// <summary>
+        /// Called when the player attempts to craft an item
+        /// </summary>
+        /// <param name="crafter"></param>
+        /// <param name="recipe"></param>
+        [HookMethod("ICanCraft")]
+        private object ICanCraft(Crafter crafter, ICraftable recipe)
+        {
+            var session = Player.Find(crafter.networkView.owner);
+            if (session == null) return null;
+
+            // Call game hook
+            return (bool)Interface.Call("CanCraft", session, recipe);
+        }
+
+        /// <summary>
         /// Called when a user is attempting to connect
         /// </summary>
         /// <param name="session"></param>
@@ -237,12 +252,12 @@ namespace Oxide.Game.Hurtworld
         [HookMethod("IOnUserApprove")]
         private object IOnUserApprove(PlayerSession session)
         {
-            session.Name = session.Identity.Name ?? "Unnamed";
+            session.Identity.Name = session.Identity.Name ?? "Unnamed";
             var id = session.SteamId.ToString();
             var ip = session.Player.ipAddress;
 
             var loginSpecific = Interface.Call("CanClientLogin", session);
-            var loginCovalence = Interface.Call("CanUserLogin", session.Name, id, ip);
+            var loginCovalence = Interface.Call("CanUserLogin", session.Identity.Name, id, ip);
             var canLogin = loginSpecific ?? loginCovalence;
 
             if (canLogin is string || (canLogin is bool && !(bool)canLogin))
@@ -252,7 +267,7 @@ namespace Oxide.Game.Hurtworld
             }
 
             var approvedSpecific = Interface.Call("OnUserApprove", session);
-            var approvedCovalence = Interface.Call("OnUserApproved", session.Name, id, ip);
+            var approvedCovalence = Interface.Call("OnUserApproved", session.Identity.Name, id, ip);
             return approvedSpecific ?? approvedCovalence;
         }
 
@@ -287,7 +302,7 @@ namespace Oxide.Game.Hurtworld
             // Parse it
             string cmd;
             string[] args;
-            ParseChatCommand(command, out cmd, out args);
+            ParseCommand(command, out cmd, out args);
             if (cmd == null) return null;
 
             // Handle it
@@ -306,18 +321,18 @@ namespace Oxide.Game.Hurtworld
         /// <summary>
         /// Called when the player has connected
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="player"></param>
         [HookMethod("IOnPlayerConnected")]
-        private void IOnPlayerConnected(string name)
+        private void IOnPlayerConnected(uLink.NetworkPlayer player)
         {
-            var session = Player.Find(name);
+            var session = Player.Find(player);
             if (session == null) return;
 
             // Update player's permissions group and name
             if (permission.IsLoaded)
             {
                 var id = session.SteamId.ToString();
-                permission.UpdateNickname(id, name);
+                permission.UpdateNickname(id, session.Identity.Name);
                 var defaultGroups = Interface.Oxide.Config.Options.DefaultGroups;
                 if (!permission.UserHasGroup(id, defaultGroups.Players)) permission.AddUserGroup(id, defaultGroups.Players);
                 if (session.IsAdmin && !permission.UserHasGroup(id, defaultGroups.Administrators)) permission.AddUserGroup(id, defaultGroups.Administrators);
@@ -491,22 +506,18 @@ namespace Oxide.Game.Hurtworld
         {
             if (effect == null || target == null || source?.Value == 0) return;
 
-            switch (effect.GetEffectType())
+            var entity = target.GetComponent<AIEntity>();
+            if (entity != null)
             {
-                case EEntityFluidEffectType.PlayerToCreatureDamage:
-                    var ent = target.GetComponent<AIEntity>();
-                    if (ent != null) Interface.CallHook("OnEntityTakeDamage", ent, source);
-                    break;
-                case EEntityFluidEffectType.CreatureToPlayerDamage:
-                case EEntityFluidEffectType.Damage:
-                case EEntityFluidEffectType.FallDamageProxy:
-                    if (target.GetComponent<AIEntity>() != null) break;
-                    var networkView = target.GetComponent<uLinkNetworkView>();
-                    if (networkView == null) break;
-                    var session = GameManager.Instance.GetSession(networkView.owner);
-                    if (session != null) Interface.CallHook("OnPlayerTakeDamage", session, source);
-                    break;
+                Interface.CallHook("OnEntityTakeDamage", entity, source);
+                return;
             }
+
+            var networkView = target.GetComponent<uLinkNetworkView>();
+            if (networkView == null) return;
+
+            var session = GameManager.Instance.GetSession(networkView.owner);
+            if (session != null) Interface.CallHook("OnPlayerTakeDamage", session, source);
         }
 
         #endregion
@@ -1035,7 +1046,7 @@ namespace Oxide.Game.Hurtworld
             if (target != null)
             {
                 userId = target.SteamId.ToString();
-                name = target.Name;
+                name = target.Identity.Name;
                 permission.UpdateNickname(userId, name);
             }
 
@@ -1085,7 +1096,7 @@ namespace Oxide.Game.Hurtworld
             if (target != null)
             {
                 userId = target.SteamId.ToString();
-                name = target.Name;
+                name = target.Identity.Name;
                 permission.UpdateNickname(userId, name);
             }
 
@@ -1159,7 +1170,7 @@ namespace Oxide.Game.Hurtworld
                 if (target != null)
                 {
                     userId = target.SteamId.ToString();
-                    name = target.Name;
+                    name = target.Identity.Name;
                     permission.UpdateNickname(userId, name);
                 }
                 permission.GrantUserPermission(userId, perm, null);
@@ -1213,7 +1224,7 @@ namespace Oxide.Game.Hurtworld
                 if (target != null)
                 {
                     userId = target.SteamId.ToString();
-                    name = target.Name;
+                    name = target.Identity.Name;
                     permission.UpdateNickname(userId, name);
                 }
                 permission.GrantUserPermission(userId, perm, null);
@@ -1273,7 +1284,7 @@ namespace Oxide.Game.Hurtworld
                 if (target != null)
                 {
                     userId = target.SteamId.ToString();
-                    name = target.Name;
+                    name = target.Identity.Name;
                     permission.UpdateNickname(userId, name);
                 }
                 permission.RevokeUserPermission(userId, perm);
@@ -1327,7 +1338,7 @@ namespace Oxide.Game.Hurtworld
                 if (target != null)
                 {
                     userId = target.SteamId.ToString();
-                    name = target.Name;
+                    name = target.Identity.Name;
                     permission.UpdateNickname(userId, name);
                 }
                 permission.RevokeUserPermission(userId, perm);
@@ -1383,7 +1394,7 @@ namespace Oxide.Game.Hurtworld
                 if (target != null)
                 {
                     userId = target.SteamId.ToString();
-                    name = target.Name;
+                    name = target.Identity.Name;
                     permission.UpdateNickname(userId, name);
                     name += $" ({userId})";
                 }
@@ -1468,7 +1479,7 @@ namespace Oxide.Game.Hurtworld
                 if (target != null)
                 {
                     userId = target.SteamId.ToString();
-                    name = target.Name;
+                    name = target.Identity.Name;
                     permission.UpdateNickname(userId, name);
                     name += $" ({userId})";
                 }
@@ -1537,12 +1548,12 @@ namespace Oxide.Game.Hurtworld
         }
 
         /// <summary>
-        /// Parses the specified chat command
+        /// Parses the specified command
         /// </summary>
         /// <param name="argstr"></param>
         /// <param name="cmd"></param>
         /// <param name="args"></param>
-        private void ParseChatCommand(string argstr, out string cmd, out string[] args)
+        private void ParseCommand(string argstr, out string cmd, out string[] args)
         {
             var arglist = new List<string>();
             var sb = new StringBuilder();
@@ -1642,7 +1653,7 @@ namespace Oxide.Game.Hurtworld
             PlayerSession session = null;
             foreach (var i in sessions)
             {
-                if (!nameOrIdOrIp.Equals(i.Value.Name, StringComparison.OrdinalIgnoreCase) &&
+                if (!nameOrIdOrIp.Equals(i.Value.Identity.Name, StringComparison.OrdinalIgnoreCase) &&
                     !nameOrIdOrIp.Equals(i.Value.SteamId.ToString()) && !nameOrIdOrIp.Equals(i.Key.ipAddress)) continue;
                 session = i.Value;
                 break;

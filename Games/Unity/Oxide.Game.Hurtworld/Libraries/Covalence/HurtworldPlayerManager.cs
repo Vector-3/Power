@@ -45,7 +45,7 @@ namespace Oxide.Game.Hurtworld.Libraries.Covalence
             if (playerData.TryGetValue(id, out record))
             {
                 // Update
-                record.Name = session.Name;
+                record.Name = session.Identity.Name;
                 playerData[id] = record;
 
                 // Swap out Rust player
@@ -55,7 +55,7 @@ namespace Oxide.Game.Hurtworld.Libraries.Covalence
             else
             {
                 // Insert
-                record = new PlayerRecord { Id = (ulong)session.SteamId, Name = session.Name };
+                record = new PlayerRecord { Id = (ulong)session.SteamId, Name = session.Identity.Name };
                 playerData.Add(id, record);
 
                 // Create Rust player
