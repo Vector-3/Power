@@ -53,7 +53,7 @@ namespace Oxide.Game.Hurtworld.Libraries
         public void Broadcast(string message, string prefix = null)
         {
             ConsoleManager.SendLog($"[Chat] {message}");
-            ChatManager.RPC("RelayChat", uLink.RPCMode.Others, prefix != null ? $"{prefix} {message}" : message);
+            ChatManager.SendChatMessage(new ServerChatMessage(prefix != null ? $"{prefix} {message}" : message));
         }
 
         /// <summary>

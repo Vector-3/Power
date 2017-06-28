@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -1631,7 +1631,8 @@ namespace Oxide.Game.Hurtworld
                 Interface.Oxide.LogInfo(message, args);
                 return;
             }
-            ChatManagerServer.Instance.RPC("RelayChat", session.Player, string.Format(message, args));
+
+            ChatManagerServer.Instance.SendChatMessage(new ServerChatMessage(string.Format(message, args)), session.Player);
         }
 
         /// <summary>
