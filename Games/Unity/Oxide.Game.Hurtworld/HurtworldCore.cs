@@ -287,7 +287,7 @@ namespace Oxide.Game.Hurtworld
             if (blockedSpecific != null || blockedCovalence != null) return true;
 
             // Is it a covalance command?
-            if (Covalence.CommandSystem.HandleChatMessage(iplayer, str)) return true;
+            if (Covalence.CommandSystem.HandleChatMessage(iplayer, message)) return true;
 
             // Is it a regular chat command?
             if (!cmdlib.HandleChatCommand(session, cmd, args))
