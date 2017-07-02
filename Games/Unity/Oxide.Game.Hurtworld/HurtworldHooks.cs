@@ -38,6 +38,8 @@ namespace Oxide.Game.Hurtworld
             var id = session.SteamId.ToString();
             var ip = session.Player.ipAddress;
 
+            Covalence.PlayerManager.PlayerJoin(session);
+
             var loginSpecific = Interface.Call("CanClientLogin", session);
             var loginCovalence = Interface.Call("CanUserLogin", session.Identity.Name, id, ip);
             var canLogin = loginSpecific ?? loginCovalence;
@@ -78,7 +80,7 @@ namespace Oxide.Game.Hurtworld
             Interface.Call("OnPlayerConnected", session);
 
             // Let covalence know
-            Covalence.PlayerManager.NotifyPlayerConnect(session);
+            Covalence.PlayerManager.PlayerConnected(session);
             var iplayer = Covalence.PlayerManager.FindPlayerById(session.SteamId.ToString());
             if (iplayer != null) Interface.Call("OnUserConnected", iplayer);
         }
@@ -93,7 +95,7 @@ namespace Oxide.Game.Hurtworld
             // Let covalence know
             var iplayer = Covalence.PlayerManager.FindPlayerById(session.SteamId.ToString());
             if (iplayer != null) Interface.Call("OnUserDisconnected", iplayer, "Unknown");
-            Covalence.PlayerManager.NotifyPlayerDisconnect(session);
+            Covalence.PlayerManager.PlayerDisconnected(session);
         }
 
         /// <summary>

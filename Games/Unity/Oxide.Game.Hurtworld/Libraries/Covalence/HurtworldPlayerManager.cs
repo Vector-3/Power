@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProtoBuf;
@@ -25,7 +25,6 @@ namespace Oxide.Game.Hurtworld.Libraries.Covalence
 
         internal void Initialize()
         {
-            // Load player data
             Utility.DatafileToProto<Dictionary<string, PlayerRecord>>("oxide.covalence");
             playerData = ProtoStorage.Load<Dictionary<string, PlayerRecord>>("oxide.covalence") ?? new Dictionary<string, PlayerRecord>();
             allPlayers = new Dictionary<string, HurtworldPlayer>();
@@ -34,7 +33,7 @@ namespace Oxide.Game.Hurtworld.Libraries.Covalence
             foreach (var pair in playerData) allPlayers.Add(pair.Key, new HurtworldPlayer(pair.Value.Id, pair.Value.Name));
         }
 
-        private void NotifyPlayerJoin(PlayerSession session)
+        internal void PlayerJoin(PlayerSession session)
         {
             var id = session.SteamId.ToString();
 
@@ -56,13 +55,13 @@ namespace Oxide.Game.Hurtworld.Libraries.Covalence
             ProtoStorage.Save(playerData, "oxide.covalence");
         }
 
-        internal void NotifyPlayerConnect(PlayerSession session)
+        internal void PlayerConnected(PlayerSession session)
         {
-            NotifyPlayerJoin(session);
+            allPlayers[session.SteamId.ToString()] = new HurtworldPlayer(session);
             connectedPlayers[session.SteamId.ToString()] = new HurtworldPlayer(session);
         }
 
-        internal void NotifyPlayerDisconnect(PlayerSession session) => connectedPlayers.Remove(session.SteamId.ToString());
+        internal void PlayerDisconnected(PlayerSession session) => connectedPlayers.Remove(session.SteamId.ToString());
 
         #region Player Finding
 
